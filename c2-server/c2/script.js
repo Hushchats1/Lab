@@ -76,7 +76,7 @@ if (window.location.pathname.startsWith('/proxy')) {
   }
 }
 
-// Dynamically Inject Responsive Mobile Layout Styles for Ghost Viewport
+// Dynamically Inject Responsive Mobile Layout & Touch Isolation Styles
 function injectMobileStyles() {
   if (document.getElementById("ghost-responsive-style")) return;
   const style = document.createElement("style");
@@ -93,6 +93,9 @@ function injectMobileStyles() {
       box-sizing: border-box !important;
       padding: 8px !important;
       overflow: hidden !important;
+      touch-action: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
     }
     #ghost-screen-stream {
       width: 100% !important;
@@ -105,6 +108,10 @@ function injectMobileStyles() {
       border-radius: 14px !important;
       box-shadow: 0 0 20px rgba(0, 242, 255, 0.25) !important;
       touch-action: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      cursor: pointer !important;
     }
   `;
   document.head.appendChild(style);
@@ -687,7 +694,7 @@ function executeShell() {
   }
 }
 
-// Ghost Screen Controls with Auto Responsive Sizing
+// Ghost Screen Controls with Smooth Touch and Viewport Scaling
 function enforceGhostViewportScaling() {
   const streamImg = document.getElementById("ghost-screen-stream");
   if (streamImg) {
@@ -699,12 +706,35 @@ function enforceGhostViewportScaling() {
     streamImg.style.display = "block";
     streamImg.style.margin = "0 auto";
     streamImg.style.borderRadius = "12px";
+    streamImg.style.touchAction = "none";
+    streamImg.style.webkitUserSelect = "none";
+    streamImg.style.userSelect = "none";
     
     const parent = streamImg.parentElement;
     if (parent) {
       parent.style.maxWidth = "100%";
       parent.style.boxSizing = "border-box";
       parent.style.overflow = "hidden";
+      parent.style.touchAction = "none";
+    }
+
+    // Attach passive touch event listeners once to guarantee smooth touch isolate & disable drag-scroll
+    if (!streamImg.dataset.touchInitialized) {
+      streamImg.dataset.touchInitialized = "true";
+      
+      streamImg.addEventListener("touchstart", function(e) {
+        if (e.cancelable) e.preventDefault();
+        startGhostDrag(e);
+      }, { passive: false });
+
+      streamImg.addEventListener("touchend", function(e) {
+        if (e.cancelable) e.preventDefault();
+        endGhostDrag(e);
+      }, { passive: false });
+
+      streamImg.addEventListener("touchmove", function(e) {
+        if (e.cancelable) e.preventDefault();
+      }, { passive: false });
     }
   }
 }
@@ -769,35 +799,51 @@ function refreshGhostScreen() {
 }
 
 function startGhostDrag(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
   const streamImg = document.getElementById("ghost-screen-stream");
   if (!streamImg) return;
+  
   const rect = streamImg.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  const touchObj = (e.touches && e.touches.length > 0) ? e.touches[0] : e;
+  const clientX = touchObj.clientX;
+  const clientY = touchObj.clientY;
+  
+  const posX = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+  const posY = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+
   _0x2c = {
-    x: (clientX - rect.left) / rect.width * 100,
-    y: (clientY - rect.top) / rect.height * 100,
+    x: posX,
+    y: posY,
     t: Date.now()
   };
 }
 
 function endGhostDrag(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
   if (!_0x2c) return;
+  
   const now = Date.now();
-  if (now - _0x2d < 150) return;
+  if (now - _0x2d < 120) return; // Debounce rapid multi-taps
   _0x2d = now;
+
   const streamImg = document.getElementById("ghost-screen-stream");
   if (!streamImg) return;
+  
   const rect = streamImg.getBoundingClientRect();
-  const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
-  const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-  const currentX = (clientX - rect.left) / rect.width * 100;
-  const currentY = (clientY - rect.top) / rect.height * 100;
-  const dragDuration = now - _0x2c.t;
+  const touchObj = (e.changedTouches && e.changedTouches.length > 0) ? e.changedTouches[0] : e;
+  const clientX = touchObj.clientX;
+  const clientY = touchObj.clientY;
 
-  if (Math.sqrt(Math.pow(currentX - _0x2c.x, 2) + Math.pow(currentY - _0x2c.y, 2)) < 2) {
+  const currentX = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+  const currentY = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+  const dragDuration = now - _0x2c.t;
+  const distance = Math.sqrt(Math.pow(currentX - _0x2c.x, 2) + Math.pow(currentY - _0x2c.y, 2));
+
+  if (distance < 2.5) {
+    // Precise single tap / click action
     fetch("/ghost/interact?action=click&px=" + _0x2c.x.toFixed(2) + "&py=" + _0x2c.y.toFixed(2));
   } else {
+    // Intentional drag / swipe action
     fetch("/ghost/interact?action=swipe&px1=" + _0x2c.x.toFixed(2) + "&py1=" + _0x2c.y.toFixed(2) + "&px2=" + currentX.toFixed(2) + "&py2=" + currentY.toFixed(2) + "&d=" + Math.max(dragDuration, 100));
   }
   _0x2c = null;
