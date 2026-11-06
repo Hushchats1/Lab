@@ -1,5 +1,5 @@
 <p align="center">
-<img width="1517" height="440" alt="Screenshot 2026-10-25 at 2 06 52 AM" src="https://github.com/user-attachments/assets/56976a4e-cc9a-423b-93f6-7f053a711b5a" />
+<img width="1315" height="493" alt="Screenshot 2026-11-06 at 4 59 47 AM" src="https://github.com/user-attachments/assets/7747d8b1-3724-423d-8ac9-5a2bf4c873c8" />
 
 <p align="center">
   <img src="https://img.shields.io/badge/JDK-21-gold?style=for-the-badge&logo=openjdk&logoColor=white">
@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Focus-Remote_Access-red?style=for-the-badge&logo=openaccess&logoColor=white">
   <img src="https://img.shields.io/badge/Security-AES_256-blueviolet?style=for-the-badge&logo=dependencycheck&logoColor=white">
   <br>
-  <img src="https://img.shields.io/badge/Network-Direct_IPv6-informational?style=for-the-badge&logo=gitconnected&logoColor=white">
+  <img src="https://img.shields.io/badge/Network-Direct_IPv6/IPv4-informational?style=for-the-badge&logo=gitconnected&logoColor=white">
   <img src="https://img.shields.io/badge/Mode-Stealth_FUD-black?style=for-the-badge&logo=ghostfolio&logoColor=white">
   <img src="https://img.shields.io/badge/License-MIT-orange?style=for-the-badge&logo=opensourceinitiative&logoColor=white">
 </p>
@@ -45,7 +45,7 @@ alt="Typing Banner"
   <img src="https://readme-typing-svg.demolab.com?font=Orbitron&weight=700&size=32&pause=9900&color=00F2FF&center=false&vCenter=true&width=800&height=70&lines=Core+Features+and+Security" alt="Typing Banner"/>
 </p>
 
-### 🔐 Remote C2 Security & Secure Handshake: 
+### 🔐 Remote C2 Security & Secure Handshake:
 > [!IMPORTANT]
 > **DEFAULT PASSWORD = admin1337**
 - The **C2 Dashboard** is **protected with a secure login** which can be **changed directly from the Terminal/Home page**. The **Default Password should be reset immediately** for **enhanced security**.
@@ -260,7 +260,7 @@ data.stealth === "true") ? "ACTIVE" : "OFF",
 <details>
   <summary><b>📸 Click to View Render C2 Screenshot</summary></b>
   <br>
-  <img src="https://github.com/user-attachments/assets/1d97c7de-2c64-45ff-8653-9c3c0ac2c772" alt="Full Web Page Screenshot" width="80%">
+  <img src="https://github.com/user-attachments/assets/3078be2f-c272-4a84-a270-c1469c550b22" alt="Full Web Page Screenshot" width="80%">
 </details>
 
 **Advantages of Option 2**:
